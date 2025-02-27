@@ -7,7 +7,6 @@ namespace Adeliom\EasyMediaBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[ORM\MappedSuperclass]
@@ -24,16 +23,20 @@ class Folder
     #[ORM\Column(length: 100)]
     protected ?string $slug = null;
 
+    #[ORM\ManyToOne(targetEntity: Folder::class, inversedBy: 'children')]
+    #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', nullable: true)]
     protected ?Folder $parent = null;
 
     /**
-     * @var Collection<Folder>
+     * @var Collection<self>
      */
+    #[ORM\OneToMany(targetEntity: Folder::class, mappedBy: 'parent')]
     protected Collection $children;
 
     /**
      * @var Collection<Media>
      */
+    #[ORM\OneToMany(targetEntity: Media::class, mappedBy: 'folder')]
     protected Collection $medias;
 
     public function __construct()
@@ -108,7 +111,7 @@ class Folder
         $tree = '';
         $current = $this;
         do {
-            $tree = $current->getSlug().$separator.$tree;
+            $tree = $current->getSlug() . $separator . $tree;
             $current = $current->getParent();
         } while ($current);
 
